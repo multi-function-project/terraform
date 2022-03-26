@@ -9,14 +9,27 @@ resource "aws_lambda_function" "main" {
   handler  = "org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest"
   runtime  = "provided.al2"
   filename = data.archive_file.dummy.output_path
-
   memory_size = 192
   timeout = 3
+  publish = true
 
   lifecycle {
     ignore_changes = all
   }
 }
+
+ resource aws_lambda_alias hello_alias {
+   function_name    = aws_lambda_function.main.function_name
+   function_version = aws_lambda_function.main.version
+   name             = var.app_version
+}
+
+resource aws_lambda_provisioned_concurrency_config hello {
+  function_name                     = aws_lambda_function.main.function_name
+  provisioned_concurrent_executions = 1
+  qualifier                         = aws_lambda_alias.hello_alias.name
+}
+
 
 data "archive_file" "dummy" {
   type        = "zip"
