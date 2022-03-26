@@ -88,9 +88,9 @@ resource "aws_api_gateway_deployment" "main" {
   }
 }
 
-# resource "aws_api_gateway_method_settings" "example" {
-#   rest_api_id = aws_api_gateway_rest_api.example.id
-#   stage_name  = aws_api_gateway_deployment.example.stage_name
+# resource "aws_api_gateway_method_settings" "main" {
+#   rest_api_id = aws_api_gateway_rest_api.main.id
+#   stage_name  = aws_api_gateway_deployment.main.stage_name
 #   method_path = "*/*"
 
 #   settings {
