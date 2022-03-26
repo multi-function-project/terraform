@@ -1,34 +1,37 @@
-locals {
-  function_name = "hello-function"
-}
-
 resource "aws_lambda_function" "main" {
-  function_name = local.function_name
+  for_each = var.function_list
+
+  function_name = each.key
   role          = aws_iam_role.lambda_role.arn
 
-  handler  = "org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest"
-  runtime  = "provided.al2"
-  filename = data.archive_file.dummy.output_path
-  memory_size = 192
-  timeout = 3
-  publish = true
+  handler     = each.value.handler
+  runtime     = each.value.runtime
+  filename    = data.archive_file.dummy.output_path
+  memory_size = each.value.memory_size
+  timeout     = each.value.timeout
+  publish     = true
 
   lifecycle {
     ignore_changes = all
   }
 }
 
- resource aws_lambda_alias hello_alias {
-   function_name    = aws_lambda_function.main.function_name
-   function_version = aws_lambda_function.main.version
-   name             = var.app_version
+resource "aws_lambda_alias" "main" {
+  depends_on = [
+    aws_lambda_function.main
+  ]
+
+  for_each         = aws_lambda_function.main
+  function_name    = aws_lambda_function.main[each.key].function_name
+  function_version = aws_lambda_function.main[each.key].version
+  name             = var.app_version
 }
 
-resource aws_lambda_provisioned_concurrency_config hello {
-  function_name                     = aws_lambda_function.main.function_name
-  provisioned_concurrent_executions = 1
-  qualifier                         = aws_lambda_alias.hello_alias.name
-}
+# resource aws_lambda_provisioned_concurrency_config hello {
+#   function_name                     = aws_lambda_function.main.function_name
+#   provisioned_concurrent_executions = 2
+#   qualifier                         = aws_lambda_alias.main.name
+# }
 
 
 data "archive_file" "dummy" {
@@ -64,5 +67,8 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
 
 
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
-  name = "/aws/lambda/${local.function_name}"
+
+  for_each = aws_lambda_function.main
+
+  name = "/aws/lambda/${each.key}"
 }

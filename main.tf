@@ -5,7 +5,7 @@ variable "region" {
 }
 
 terraform {
-  required_version = "1.0.0"
+  required_version = "1.1.7"
 
   required_providers {
     aws = "~> 4.0"
@@ -23,3 +23,5 @@ provider "aws" {
     }
   }
 }
+
+data "aws_caller_identity" "self" {}
