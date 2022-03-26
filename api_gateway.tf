@@ -47,7 +47,9 @@ resource "aws_api_gateway_method_response" "main" {
 
 resource "aws_api_gateway_integration" "main" {
   depends_on = [
-    aws_api_gateway_method.main
+    aws_api_gateway_method.main,
+    aws_lambda_function.main,
+    aws_lambda_alias.main
   ]
 
   for_each    = aws_api_gateway_method.main
@@ -61,12 +63,17 @@ resource "aws_api_gateway_integration" "main" {
 }
 
 resource "aws_lambda_permission" "main" {
-  for_each = aws_lambda_function.main
+  depends_on = [
+    aws_lambda_function.main,
+    aws_lambda_alias.main
+  ]
+
+  for_each = aws_lambda_alias.main
 
   action        = "lambda:InvokeFunction"
   function_name = each.value.function_name
   principal     = "apigateway.amazonaws.com"
-  qualifier     = var.app_version
+  qualifier     = each.value.name
   # The /*/*/* part allows invocation from any stage, method and resource path
   # within API Gateway REST API.
   source_arn = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
