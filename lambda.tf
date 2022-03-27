@@ -16,15 +16,37 @@ resource "aws_lambda_function" "main" {
   }
 }
 
+locals {
+  function_list  = [
+    for key, function in aws_lambda_function.main : {
+      key     = key
+      function_name = function.function_name
+      function_version = function.version
+    }
+  ]
+  alias_list = [
+      for pair in setproduct(local.function_list, var.api_version_list) : {
+      function_name = pair[0].key
+      function_version = pair[0].function_version
+      alias_name = pair[1]
+      key         = "${pair[0].key}:${pair[1]}"
+    }
+  ]
+}
 resource "aws_lambda_alias" "main" {
   depends_on = [
     aws_lambda_function.main
   ]
 
-  for_each         = aws_lambda_function.main
-  function_name    = aws_lambda_function.main[each.key].function_name
-  function_version = aws_lambda_function.main[each.key].version
-  name             = var.app_version
+  for_each = { for alias in local.alias_list : alias.key => alias }
+  function_name    = each.value.function_name
+  function_version = each.value.function_version
+  name             = each.value.alias_name
+
+  # for_each         = aws_lambda_function.main
+  # function_name    = aws_lambda_function.main[each.key].function_name
+  # function_version = aws_lambda_function.main[each.key].version
+  # name             = var.app_version
 }
 
 # resource aws_lambda_provisioned_concurrency_config hello {
@@ -32,7 +54,6 @@ resource "aws_lambda_alias" "main" {
 #   provisioned_concurrent_executions = 2
 #   qualifier                         = aws_lambda_alias.main.name
 # }
-
 
 data "archive_file" "dummy" {
   type        = "zip"
@@ -66,10 +87,7 @@ resource "aws_iam_role_policy_attachment" "lambda_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
-
   for_each = aws_lambda_function.main
-
   name = "/aws/lambda/${each.key}"
 }

@@ -6,6 +6,10 @@ variable "api_key" {
   type = string
 }
 
+variable "api_version_list" {
+  type = list(string)
+}
+
 variable "function_list" {
 
   default = {
