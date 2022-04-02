@@ -83,7 +83,7 @@ data "aws_caller_identity" "self" {}
 # }
 
 # mapとリストの結合
-locals  {
+locals {
   version = ["1-0-0", "2-0-0"]
 
   functions = [
@@ -94,7 +94,7 @@ locals  {
   ]
 
   alist = [
-        for pair in setproduct(local.functions, local.version) : {
+    for pair in setproduct(local.functions, local.version) : {
       fuction_key = pair[0].key
       version_key = pair[1]
       key         = "${pair[0].key}:${pair[1]}"
