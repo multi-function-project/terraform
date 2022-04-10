@@ -18,6 +18,10 @@ resource "aws_lambda_function" "main" {
 }
 
 locals {
+  depends_on = [
+    aws_lambda_function.main
+  ]
+
   function_list = [
     for key, value in aws_lambda_function.main : {
       key              = key
@@ -36,7 +40,7 @@ locals {
 }
 resource "aws_lambda_alias" "main" {
   depends_on = [
-    aws_lambda_function.main
+    local.alias_list
   ]
 
   for_each         = { for alias in local.alias_list : alias.key => alias }
@@ -45,13 +49,27 @@ resource "aws_lambda_alias" "main" {
   name             = each.value.alias_name
 }
 
-# resource aws_lambda_provisioned_concurrency_config main {
-#   function_name                     = aws_lambda_function.main.function_name
-#   provisioned_concurrent_executions = 1
-#   qualifier                         = aws_lambda_alias.main.name
-# }
+resource "aws_lambda_provisioned_concurrency_config" "main" {
+  depends_on = [
+    aws_lambda_alias.main
+  ]
+
+  for_each                          = aws_lambda_alias.main
+  function_name                     = each.value.function_name
+  provisioned_concurrent_executions = 1
+  # qualifier                         = each.value.name
+  qualifier = each.value.function_version
+  timeouts {
+    create = "15m"
+    update = "15m"
+  }
+}
 
 resource "aws_lambda_function_url" "main" {
+  depends_on = [
+    aws_lambda_alias.main
+  ]
+
   for_each           = aws_lambda_alias.main
   function_name      = each.value.function_name
   qualifier          = each.value.name
