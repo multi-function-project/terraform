@@ -4,12 +4,13 @@ resource "aws_lambda_function" "main" {
   function_name = each.key
   role          = aws_iam_role.lambda_role.arn
 
-  handler     = each.value.handler
-  runtime     = each.value.runtime
-  filename    = data.archive_file.dummy.output_path
-  memory_size = each.value.memory_size
-  timeout     = each.value.timeout
-  publish     = true
+  handler       = each.value.handler
+  runtime       = each.value.runtime
+  filename      = data.archive_file.dummy.output_path
+  memory_size   = each.value.memory_size
+  timeout       = each.value.timeout
+  architectures = ["x86_64"]
+  publish       = true
 
   lifecycle {
     ignore_changes = all
@@ -18,10 +19,10 @@ resource "aws_lambda_function" "main" {
 
 locals {
   function_list = [
-    for key, function in aws_lambda_function.main : {
+    for key, value in aws_lambda_function.main : {
       key              = key
-      function_name    = function.function_name
-      function_version = function.version
+      function_name    = value.function_name
+      function_version = value.version
     }
   ]
   alias_list = [
@@ -42,27 +43,49 @@ resource "aws_lambda_alias" "main" {
   function_name    = each.value.function_name
   function_version = each.value.function_version
   name             = each.value.alias_name
-
-  # for_each         = aws_lambda_function.main
-  # function_name    = aws_lambda_function.main[each.key].function_name
-  # function_version = aws_lambda_function.main[each.key].version
-  # name             = var.app_version
 }
 
-# resource aws_lambda_provisioned_concurrency_config hello {
+# resource aws_lambda_provisioned_concurrency_config main {
 #   function_name                     = aws_lambda_function.main.function_name
-#   provisioned_concurrent_executions = 2
+#   provisioned_concurrent_executions = 1
 #   qualifier                         = aws_lambda_alias.main.name
 # }
 
+resource "aws_lambda_function_url" "main" {
+  for_each           = aws_lambda_alias.main
+  function_name      = each.value.function_name
+  qualifier          = each.value.name
+  authorization_type = "AWS_IAM"
+
+  cors {
+    allow_credentials = true
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
+    allow_headers     = ["date", "keep-alive"]
+    expose_headers    = ["keep-alive", "date"]
+    max_age           = 86400
+  }
+}
+
+
+resource "aws_lambda_permission" "main" {
+  depends_on = [
+    aws_lambda_function_url.main
+  ]
+
+  for_each      = aws_lambda_function_url.main
+  statement_id  = "lambda-invoke-url"
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = each.value.function_name
+  principal     = "arn:aws:iam::321058214401:root"
+  qualifier     = each.value.qualifier
+}
+
+
 data "archive_file" "dummy" {
   type        = "zip"
+  source_dir  = "src"
   output_path = "${path.module}/dummy.zip"
-
-  source {
-    content  = "dummy"
-    filename = "bootstrap"
-  }
 }
 
 resource "aws_iam_role" "lambda_role" {

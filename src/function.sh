@@ -1,7 +1,6 @@
 function handler () {
-  EVENT_DATA=$1
-  echo "$EVENT_DATA" 1>&2;
-  RESPONSE="Echoing request: '$EVENT_DATA'"
+    EVENT_DATA=$1
 
-  echo $RESPONSE
+    RESPONSE="{\"statusCode\": 200, \"body\": \"Hello from Lambda!\"}"
+    echo $RESPONSE
 }
