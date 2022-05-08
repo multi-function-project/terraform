@@ -45,6 +45,8 @@ resource "aws_api_gateway_method_response" "main" {
   }
 }
 
+// https://qiita.com/neruneruo/items/87fab83e25c723ef878c
+// https://zenn.dev/masaino/articles/dd9ee709799af0
 resource "aws_api_gateway_method" "option" {
   depends_on = [
     aws_api_gateway_resource.main
