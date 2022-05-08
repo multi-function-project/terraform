@@ -49,55 +49,55 @@ resource "aws_lambda_alias" "main" {
   name             = each.value.alias_name
 }
 
-resource "aws_lambda_provisioned_concurrency_config" "main" {
-  depends_on = [
-    aws_lambda_alias.main
-  ]
+# resource "aws_lambda_provisioned_concurrency_config" "main" {
+#   depends_on = [
+#     aws_lambda_alias.main
+#   ]
 
-  for_each                          = aws_lambda_alias.main
-  function_name                     = each.value.function_name
-  provisioned_concurrent_executions = 1
-  # qualifier                         = each.value.name
-  qualifier = each.value.function_version
-  timeouts {
-    create = "15m"
-    update = "15m"
-  }
-}
+#   for_each                          = aws_lambda_alias.main
+#   function_name                     = each.value.function_name
+#   provisioned_concurrent_executions = 1
+#   qualifier                         = each.value.name
+#   # qualifier = each.value.function_version
+#   timeouts {
+#     create = "15m"
+#     update = "15m"
+#   }
+# }
 
-resource "aws_lambda_function_url" "main" {
-  depends_on = [
-    aws_lambda_alias.main
-  ]
+# resource "aws_lambda_function_url" "main" {
+#   depends_on = [
+#     aws_lambda_alias.main
+#   ]
 
-  for_each           = aws_lambda_alias.main
-  function_name      = each.value.function_name
-  qualifier          = each.value.name
-  authorization_type = "AWS_IAM"
+#   for_each           = aws_lambda_alias.main
+#   function_name      = each.value.function_name
+#   qualifier          = each.value.name
+#   authorization_type = "AWS_IAM"
 
-  cors {
-    allow_credentials = true
-    allow_origins     = ["*"]
-    allow_methods     = ["*"]
-    allow_headers     = ["date", "keep-alive"]
-    expose_headers    = ["keep-alive", "date"]
-    max_age           = 86400
-  }
-}
+#   cors {
+#     allow_credentials = true
+#     allow_origins     = ["*"]
+#     allow_methods     = ["*"]
+#     allow_headers     = ["date", "keep-alive"]
+#     expose_headers    = ["keep-alive", "date"]
+#     max_age           = 86400
+#   }
+# }
 
 
-resource "aws_lambda_permission" "main" {
-  depends_on = [
-    aws_lambda_function_url.main
-  ]
+# resource "aws_lambda_permission" "main" {
+#   depends_on = [
+#     aws_lambda_function_url.main
+#   ]
 
-  for_each      = aws_lambda_function_url.main
-  statement_id  = "lambda-invoke-url"
-  action        = "lambda:InvokeFunctionUrl"
-  function_name = each.value.function_name
-  principal     = "arn:aws:iam::321058214401:root"
-  qualifier     = each.value.qualifier
-}
+#   for_each      = aws_lambda_function_url.main
+#   statement_id  = "lambda-invoke-url"
+#   action        = "lambda:InvokeFunctionUrl"
+#   function_name = each.value.function_name
+#   principal     = "arn:aws:iam::321058214401:root"
+#   qualifier     = each.value.qualifier
+# }
 
 
 data "archive_file" "dummy" {
