@@ -22,12 +22,12 @@ resource "aws_api_gateway_method" "main" {
     aws_api_gateway_resource.main
   ]
 
-  for_each      = aws_api_gateway_resource.main
-  rest_api_id   = aws_api_gateway_rest_api.main.id
-  resource_id   = aws_api_gateway_resource.main[each.key].id
-  http_method   = "POST"
-  authorization = "NONE"
-  # api_key_required = true
+  for_each         = aws_api_gateway_resource.main
+  rest_api_id      = aws_api_gateway_rest_api.main.id
+  resource_id      = aws_api_gateway_resource.main[each.key].id
+  http_method      = "POST"
+  authorization    = "NONE"
+  api_key_required = true
 }
 
 resource "aws_api_gateway_method_response" "main" {
@@ -45,74 +45,74 @@ resource "aws_api_gateway_method_response" "main" {
   }
 }
 
-# resource "aws_api_gateway_method" "option" {
-#   depends_on = [
-#     aws_api_gateway_resource.main
-#   ]
+resource "aws_api_gateway_method" "option" {
+  depends_on = [
+    aws_api_gateway_resource.main
+  ]
 
-#   for_each      = aws_api_gateway_resource.main
-#   rest_api_id   = aws_api_gateway_rest_api.main.id
-#   resource_id   = aws_api_gateway_resource.main[each.key].id
-#   http_method   = "OPTIONS"
-#   authorization = "NONE"
-# }
-# resource "aws_api_gateway_method_response" "option" {
-#   depends_on = [
-#     aws_api_gateway_method.option
-#   ]
+  for_each      = aws_api_gateway_resource.main
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.main[each.key].id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+resource "aws_api_gateway_method_response" "option" {
+  depends_on = [
+    aws_api_gateway_method.option
+  ]
 
-#   for_each    = aws_api_gateway_method.option
-#   rest_api_id = aws_api_gateway_rest_api.main.id
-#   resource_id = aws_api_gateway_method.option[each.key].resource_id
-#   http_method = aws_api_gateway_method.option[each.key].http_method
-#   status_code = "200"
+  for_each    = aws_api_gateway_method.option
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_method.option[each.key].resource_id
+  http_method = aws_api_gateway_method.option[each.key].http_method
+  status_code = "200"
 
-#   response_models = {
-#     "application/json" = "Empty"
-#   }
+  response_models = {
+    "application/json" = "Empty"
+  }
 
-#   response_parameters = {
-#     "method.response.header.Access-Control-Allow-Headers" = true,
-#     "method.response.header.Access-Control-Allow-Methods" = true,
-#     "method.response.header.Access-Control-Allow-Origin"  = true
-#   }
-# }
-# resource "aws_api_gateway_integration_response" "option" {
-#   depends_on = [
-#     aws_api_gateway_method_response.option
-#   ]
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+resource "aws_api_gateway_integration_response" "option" {
+  depends_on = [
+    aws_api_gateway_method_response.option
+  ]
 
-#   for_each    = aws_api_gateway_method_response.option
-#   rest_api_id = aws_api_gateway_rest_api.main.id
-#   resource_id = aws_api_gateway_method_response.option[each.key].resource_id
-#   http_method = aws_api_gateway_method_response.option[each.key].http_method
-#   status_code = "200"
+  for_each    = aws_api_gateway_method_response.option
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_method_response.option[each.key].resource_id
+  http_method = aws_api_gateway_method_response.option[each.key].http_method
+  status_code = "200"
 
-#   response_parameters = {
-#     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-#     "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
-#     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-#   }
-# }
-# resource "aws_api_gateway_integration" "option" {
-#   depends_on = [
-#     aws_api_gateway_method.option
-#   ]
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+resource "aws_api_gateway_integration" "option" {
+  depends_on = [
+    aws_api_gateway_method.option
+  ]
 
-#   for_each    = aws_api_gateway_method.option
-#   rest_api_id = aws_api_gateway_rest_api.main.id
-#   resource_id = aws_api_gateway_method.option[each.key].resource_id
-#   http_method = aws_api_gateway_method.option[each.key].http_method
-#   type        = "MOCK"
+  for_each    = aws_api_gateway_method.option
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_method.option[each.key].resource_id
+  http_method = aws_api_gateway_method.option[each.key].http_method
+  type        = "MOCK"
 
-#   request_templates = {
-#     "application/json" = <<EOF
-# {
-#   "statusCode": 200
-# }
-# EOF
-#   }
-# }
+  request_templates = {
+    "application/json" = <<EOF
+{
+  "statusCode": 200
+}
+EOF
+  }
+}
 
 resource "aws_api_gateway_integration" "main" {
   depends_on = [
